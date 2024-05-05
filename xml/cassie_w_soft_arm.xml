@@ -1,0 +1,975 @@
+<!-- Cassie simulation model developed by the Dynamic Robotics Laboratory -->
+<mujoco model='cassie'>
+  <compiler inertiafromgeom='auto' angle='degree' eulerseq='zyx' meshdir='xml/cassie-stl-meshes' autolimits='true'/>
+  <size nuser_actuator='1' nuser_sensor='1' nuser_geom='1'/>
+  <!-- <option timestep='0.0005' iterations='50' solver='PGS' gravity='0 0 -9.81'/> -->
+  <option timestep='0.0005' solver="Newton" iterations="50" tolerance="1e-10" collision="dynamic" integrator="implicitfast" jacobian="dense" cone="elliptic" gravity='0 0 -9.810'/>
+  <!-- Timestep is set to 0.0005 because our controller runs at 2 kHz -->
+  <!-- Larger values still have stable dynamics -->
+
+  <visual>
+    <quality shadowsize='4096'/>
+    <map znear='0.05'/>
+  </visual>
+
+  <extension>
+    <plugin plugin="mujoco.elasticity.cable"/>
+  </extension>
+
+
+  <default>
+    <joint limited='true'/>
+    <motor ctrllimited='true'/>
+    <geom contype='0' conaffinity='0' condim='1' solref='0.005 1'/>
+    <equality solref='0.005 1'/>
+    <default class='cassie'>
+      <geom material='cassie'/>
+    </default>
+    <default class='collision'>
+      <!-- User parameter for geoms is used to identify collision types -->
+      <geom material='collision' contype='1' user='2'/>
+      <default class='collision-left'>
+        <geom contype='2' conaffinity='4'/>
+      </default>
+      <default class='collision-right'>
+        <geom contype='4' conaffinity='2'/>
+      </default>
+    </default>
+    <default class='obstacle'>
+      <geom material='obstacle' condim='3' contype='8' conaffinity='15' user='1'/>
+    </default>
+  </default>
+
+  <asset>
+    <texture type='skybox' builtin='gradient' width='128' height='128' rgb1='0.4 0.6 0.8' rgb2='0 0 0'/>
+    <texture name='plane' type='2d' builtin='checker' rgb1='0.2 0.2 0.2' rgb2='0.3 0.3 0.3' width='512' height='512'/>
+    <material name='plane' reflectance='0.0' texture='plane' texrepeat='1 1' texuniform='true'/>
+    <material name='cassie'    rgba='0.9 0.5 0.1 1'/>
+    <material name='collision' rgba='0.1 0.5 0.9 0'/>
+    <material name='obstacle'  rgba='0.2 0.6 0.2 1'/>
+    <mesh name='cassie-pelvis' file='pelvis.stl'/>
+    <mesh name='left-hip-roll'     file='hip-roll.stl'/>
+    <mesh name='left-hip-yaw'      file='hip-yaw.stl'/>
+    <mesh name='left-hip-pitch'    file='hip-pitch.stl'/>
+    <mesh name='left-achilles-rod' file='achilles-rod.stl'/>
+    <mesh name='left-knee'         file='knee.stl'/>
+    <mesh name='left-knee-spring'  file='knee-spring.stl'/>
+    <mesh name='left-shin'         file='shin.stl'/>
+    <mesh name='left-tarsus'       file='tarsus.stl'/>
+    <mesh name='left-heel-spring'  file='heel-spring.stl'/>
+    <mesh name='left-foot-crank'   file='foot-crank.stl'/>
+    <mesh name='left-plantar-rod'  file='plantar-rod.stl'/>
+    <mesh name='left-foot'         file='foot.stl'/>
+    <mesh name='right-hip-roll'     scale='1 -1 1' file='hip-roll.stl'/>
+    <mesh name='right-hip-yaw'      scale='1 -1 1' file='hip-yaw.stl'/>
+    <mesh name='right-hip-pitch'    scale='1 1 -1' file='hip-pitch.stl'/>
+    <mesh name='right-achilles-rod' scale='1 1 -1' file='achilles-rod.stl'/>
+    <mesh name='right-knee'         scale='1 1 -1' file='knee.stl'/>
+    <mesh name='right-knee-spring'  scale='1 1 -1' file='knee-spring.stl'/>
+    <mesh name='right-shin'         scale='1 1 -1' file='shin.stl'/>
+    <mesh name='right-tarsus'       scale='1 1 -1' file='tarsus.stl'/>
+    <mesh name='right-heel-spring'  scale='1 1 -1' file='heel-spring.stl'/>
+    <mesh name='right-foot-crank'   scale='1 1 -1' file='foot-crank.stl'/>
+    <mesh name='right-plantar-rod'  scale='1 1 -1' file='plantar-rod.stl'/>
+    <mesh name='right-foot'         scale='1 1 -1' file='foot.stl'/>
+    <mesh name="base_link" file="base_link.stl" />
+    <mesh name="shoulder_link" file="shoulder_link.stl" />
+    <mesh name="bicep_link" file="bicep_link.stl" />
+    <mesh name="forearm_link" file="forearm_link.stl" />
+    <mesh name="spherical_wrist_1_link" file="spherical_wrist_1_link.stl" />
+    <mesh name="spherical_wrist_2_link" file="spherical_wrist_2_link.stl" />
+    <mesh name="bracelet_no_vision_link" file="bracelet_no_vision_link.stl" />
+  </asset>
+
+  <worldbody>
+    <geom name='floor' pos='0.001 0 0' size='100 10 .125' type='plane' material='plane' condim='3' conaffinity='15'/>
+
+    <light mode='trackcom' pos='0 0 5' dir='0 0 -1'/>
+    <light directional='true' pos='0 0 3' dir='0 0 -1' diffuse='0.2 0.2 0.2' specular='0 0 0'/>
+
+    <body name='cassie-pelvis' pos='0 0 1.01' childclass='cassie'>
+      <camera name='track' pos='0 -3 1' zaxis='0 -1 0.5' mode='track'/>
+      <!--camera name='track' pos='-3 0 0' xyaxes='0 -1 0 0 0 1' mode='track'/-->
+      <inertial pos='0.05066 0.000346 0.02841' mass='10.33' fullinertia='0.085821 0.049222 0.08626 1.276e-05 -0.00016022 -0.000414'/>
+      <joint type='slide' axis='1 0 0' limited='false'/>
+      <joint type='slide' axis='0 1 0' limited='false'/>
+      <joint type='slide' axis='0 0 1' limited='false' ref='1.01'/>
+      <joint type='ball' limited='false'/>
+      <geom type='mesh' mesh='cassie-pelvis'/>
+      <geom type='sphere' size='0.15' pos='0.02 0 0.02' class='collision'/>
+      <site name='imu' size='0.01' pos='0.03155 0 -0.07996'/>
+
+      <site name='range1' type='cylinder' size='0.005 0.1 0.005' rgba='0.5 0.5 0.5 1' fromto='0 0 -0.1 0.02452 0 -0.10488'/>
+      <site name='range2' type='cylinder' size='0.005 0.1 0.005' rgba='0.5 0.5 0.5 1' fromto='0 0 -0.1 0.02031 0 -0.10957'/>
+      <site name='range3' type='cylinder' size='0.005 0.1 0.005' rgba='0.5 0.5 0.5 1' fromto='0 0 -0.1 0.02079 0 -0.11389'/>
+      <site name='range4' type='cylinder' size='0.005 0.1 0.005' rgba='0.5 0.5 0.5 1' fromto='0 0 -0.1 0.01768 0 -0.11768'/>
+      <site name='range5' type='cylinder' size='0.005 0.1 0.005' rgba='0.5 0.5 0.5 1' fromto='0 0 -0.1 0.01389 0 -0.12079'/>
+      <site name='range6' type='cylinder' size='0.005 0.1 0.005' rgba='0.5 0.5 0.5 1' fromto='0 0 -0.1 0.00957 0 -0.12310'/>
+
+      
+
+      <body name='left-hip-roll' pos='0.021 0.135 0' xyaxes='0 0 -1 0 1 0'>
+        <inertial pos='-0.01793 0.0001 -0.04428' mass='1.82' fullinertia='0.003431 0.003793 0.002135 -6.65e-07 -0.00084 3.99e-06'/>
+        <joint name='left-hip-roll' type='hinge' range='-15 22.5' damping='1' armature='0.038125'/>
+        <geom type='mesh' mesh='left-hip-roll'/>
+        <body name='left-hip-yaw' pos='0 0 -0.07' xyaxes='0 0 1 0 1 0'>
+          <inertial pos='0 -1e-05 -0.034277' mass='1.171' fullinertia='0.002443 0.002803 0.000842 -4e-08 2.462e-07 -2.71e-08'/>
+          <joint name='left-hip-yaw' type='hinge' range='-22.5 22.5' damping='1' armature='0.038125'/>
+          <geom type='mesh' mesh='left-hip-yaw'/>
+          <body name='left-hip-pitch' pos='0 0 -0.09' xyaxes='0 0 -1 1 0 0'>
+            <inertial pos='0.05946 5e-05 -0.03581' mass='5.52' fullinertia='0.010898 0.029714 0.030257 -0.0002669 -5.721e-05 9.17e-06'/>
+            <joint name='left-hip-pitch' type='hinge' range='-50 80' damping='1' armature='0.09344'/>
+            <geom type='mesh' mesh='left-hip-pitch'/>
+            <geom type='capsule' size='0.08' fromto='0 0 -0.04 0.12 0 -0.0355' class='collision'/>
+            <body name='left-achilles-rod' pos='0 0 0.045' xyaxes='0.7922 -0.60599 -0.072096 0.60349 0.79547 -0.054922'>
+              <inertial pos='0.24719 0 0' mass='0.1567' fullinertia='3.754e-06 0.004487 0.004488 -3.74e-08 -1.61e-08 0'/>
+              <joint name='left-achilles-rod' type='ball' limited='false' damping='0.01'/>
+              <geom type='mesh' mesh='left-achilles-rod'/>
+            </body>
+            <body name='left-knee' pos='0.12 0 0.0045' xyaxes='0.70711 -0.70711 0 0.70711 0.70711 0'>
+              <inertial pos='0.023 0.03207 -0.002181' mass='0.7578' fullinertia='0.001376 0.0010335 0.0021637 -0.00039744 -4.085e-05 -5.374e-05'/>
+              <joint name='left-knee' type='hinge' ref='-45' range='-164 -37' damping='1' armature='0.09344'/>
+              <geom type='mesh' mesh='left-knee'/>
+              <body name='left-knee-spring' pos='0.06068 0.08241 0'>
+                <inertial pos='0.0836 0.0034 0' mass='0.186' fullinertia='5.215e-05 0.00041205 0.0003669 6.87e-06 0 0'/>
+                <geom type='mesh' mesh='left-knee-spring'/>
+              </body>
+              <body name='left-shin' pos='0.06068 0.04741 0'>
+                <inertial pos='0.18338 0.001169 0.0002123' mass='0.577' fullinertia='0.00035939 0.014728 0.014707 -0.00020981 2.266e-05 -1.2e-07'/>
+                <joint name='left-shin' type='hinge' range='-20 20' stiffness='1500' damping='0.1'/>
+                <geom type='mesh' mesh='left-shin'/>
+                <geom type='capsule' size='0.04' fromto='0 0 0 0.43476 0.02 0' class='collision-left'/>
+                <body name='left-tarsus' pos='0.43476 0.02 0' xyaxes='0.52992 0.84805 0 -0.84805 0.52992 0'>
+                  <inertial pos='0.11046 -0.03058 -0.00131' mass='0.782' fullinertia='0.00039238 0.013595 0.013674 0.00023651 -4.987e-05 -4.82e-06'/>
+                  <joint name='left-tarsus' type='hinge' ref='58' range='50 170' damping='0.1'/>
+                  <geom type='mesh' mesh='left-tarsus'/>
+                  <geom type='capsule' size='0.04' fromto='-0.01269 -0.03059 0.00092 0.408 -0.04 0' class='collision-left'/>
+                  <body name='left-heel-spring' pos='-0.01269 -0.03059 0.00092' xyaxes='-0.91211 0.40829 0.036948 -0.40992 -0.90952 -0.068841'>
+                    <inertial pos='0.081 0.0022 0' mass='0.126' fullinertia='2.959e-05 0.00022231 0.0002007 7.15e-06 -6e-07 1e-07'/>
+                    <joint name='left-heel-spring' type='hinge' limited='false' stiffness='1250'/>
+                    <geom type='mesh' mesh='left-heel-spring'/>
+                  </body>
+                  <body name='left-foot-crank' pos='0.058 -0.034 0.02275'>
+                    <inertial pos='0.00493 2e-05 -0.00215' mass='0.1261' fullinertia='2.6941e-05 4.9621e-05 6.3362e-05 -2.1e-09 -3.9623e-06 -1.09e-08'/>
+                    <joint name='left-foot-crank' type='hinge' range='-140 -30' damping='1'/>
+                    <geom type='mesh' mesh='left-foot-crank'/>
+                    <body name='left-plantar-rod' pos='0.055 0 -0.00791'>
+                      <inertial pos='0.17792 0 0' mass='0.1186' fullinertia='2.779e-06 0.001774 0.001775 -2.34e-08 -8.1e-09 0'/>
+                      <joint name='left-plantar-rod' type='hinge' limited='false'/>
+                      <geom type='mesh' mesh='left-plantar-rod'/>
+                    </body>
+                  </body>
+                  <body name='left-foot' pos='0.408 -0.04 0'>
+                    <inertial pos='0.00474 0.02748 -0.00014' mass='0.1498' fullinertia='0.00017388 0.00016793 0.00033261 0.00011814 1.36e-06 -4e-07'/>
+                    <joint name='left-foot' type='hinge' range='-140 -30' damping='1' armature='0.01225'/>
+                    <geom type='mesh' mesh='left-foot'/>
+                    <geom type='capsule' size='0.02' fromto='-0.052821 0.092622 0 0.069746 -0.010224 0' class='collision-left'/>
+                    <site name="left-foot-pt" type="sphere" pos="0.01965 0.05375 0" size="0.005" rgba="0.7 0.2 0.1 1"/>
+                    <site name="left-toe" type="sphere" pos="-0.052821 0.092622 0" size="0.005" rgba="0.7 0.2 0.1 1"/>
+                    <site name="left-heel" type="sphere" pos="0.069746 -0.010224 0" size="0.005" rgba="0.7 0.2 0.1 1"/>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+      <body name='right-hip-roll' pos='0.021 -0.135 0' xyaxes='0 0 -1 0 1 0'>
+        <inertial pos='-0.01793 0.0001 -0.04428' mass='1.82' fullinertia='0.003431 0.003793 0.002135 6.65e-07 -0.00084 -3.99e-06'/>
+        <joint name='right-hip-roll' type='hinge' range='-22.5 15' damping='1' armature='0.038125'/>
+        <geom type='mesh' mesh='right-hip-roll'/>
+        <body name='right-hip-yaw' pos='0 0 -0.07' xyaxes='0 0 1 0 1 0'>
+          <inertial pos='0 1e-05 -0.034277' mass='1.171' fullinertia='0.002443 0.002803 0.000842 4e-08 2.462e-07 2.71e-08'/>
+          <joint name='right-hip-yaw' type='hinge' range='-22.5 22.5' damping='1' armature='0.038125'/>
+          <geom type='mesh' mesh='right-hip-yaw'/>
+          <body name='right-hip-pitch' pos='0 0 -0.09' xyaxes='0 0 -1 1 0 0'>
+            <inertial pos='0.05946 5e-05 0.03581' mass='5.52' fullinertia='0.010898 0.029714 0.030257 -0.0002669 5.721e-05 -9.17e-06'/>
+            <joint name='right-hip-pitch' type='hinge' range='-50 80' damping='1' armature='0.09344'/>
+            <geom type='mesh' mesh='right-hip-pitch'/>
+            <geom type='capsule' size='0.08' fromto='0 0 0.04 0.12 0 0.0355' class='collision'/>
+            <body name='right-achilles-rod' pos='0 0 -0.045' xyaxes='0.7922 -0.60599 0.072096 0.60349 0.79547 0.054922'>
+              <inertial pos='0.24719 0 0' mass='0.1567' fullinertia='3.754e-06 0.004487 0.004488 -3.74e-08 1.61e-08 0'/>
+              <joint name='right-achilles-rod' type='ball' limited='false' damping='0.01'/>
+              <geom type='mesh' mesh='right-achilles-rod'/>
+            </body>
+            <body name='right-knee' pos='0.12 0 -0.0045' xyaxes='0.70711 -0.70711 0 0.70711 0.70711 0'>
+              <inertial pos='0.023 0.03207 0.002181' mass='0.7578' fullinertia='0.001376 0.0010335 0.0021637 -0.00039744 4.085e-05 5.374e-05'/>
+              <joint name='right-knee' type='hinge' ref='-45' range='-164 -37' damping='1' armature='0.09344'/>
+              <geom type='mesh' mesh='right-knee'/>
+              <body name='right-knee-spring' pos='0.06068 0.08241 0'>
+                <inertial pos='0.0836 0.0034 0' mass='0.186' fullinertia='5.215e-05 0.00041205 0.0003669 6.87e-06 0 0'/>
+                <geom type='mesh' mesh='right-knee-spring'/>
+              </body>
+              <body name='right-shin' pos='0.06068 0.04741 0'>
+                <inertial pos='0.18338 0.001169 -0.0002123' mass='0.577' fullinertia='0.00035939 0.014728 0.014707 -0.00020981 -2.266e-05 1.2e-07'/>
+                <joint name='right-shin' type='hinge' range='-20 20' stiffness='1500' damping='0.1'/>
+                <geom type='mesh' mesh='right-shin'/>
+                <geom type='capsule' size='0.04' fromto='0 0 0 0.43476 0.02 0' class='collision-right'/>
+                <body name='right-tarsus' pos='0.43476 0.02 0' xyaxes='0.52992 0.84805 0 -0.84805 0.52992 0'>
+                  <inertial pos='0.11046 -0.03058 0.00131' mass='0.782' fullinertia='0.00039238 0.013595 0.013674 0.00023651 4.987e-05 4.82e-06'/>
+                  <joint name='right-tarsus' type='hinge' ref='58' range='50 170' damping='0.1'/>
+                  <geom type='mesh' mesh='right-tarsus'/>
+                  <geom type='capsule' size='0.04' fromto='-0.01269 -0.03059 -0.00092 0.408 -0.04 0' class='collision-right'/>
+                  <body name='right-heel-spring' pos='-0.01269 -0.03059 -0.00092' xyaxes='-0.91211 0.40829 -0.036948 -0.40992 -0.90952 0.068841'>
+                    <inertial pos='0.081 0.0022 0' mass='0.126' fullinertia='2.959e-05 0.00022231 0.0002007 7.15e-06 6e-07 -1e-07'/>
+                    <joint name='right-heel-spring' type='hinge' limited='false' stiffness='1250'/>
+                    <geom type='mesh' mesh='right-heel-spring'/>
+                  </body>
+                  <body name='right-foot-crank' pos='0.058 -0.034 -0.02275'>
+                    <inertial pos='0.00493 2e-05 0.00215' mass='0.1261' fullinertia='2.6941e-05 4.9621e-05 6.3362e-05 -2.1e-09 3.9623e-06 1.09e-08'/>
+                    <joint name='right-foot-crank' type='hinge' range='-140 -30' damping='1'/>
+                    <geom type='mesh' mesh='right-foot-crank'/>
+                    <body name='right-plantar-rod' pos='0.055 0 0.00791'>
+                      <inertial pos='0.17792 0 0' mass='0.1186' fullinertia='2.779e-06 0.001774 0.001775 -2.34e-08 8.1e-09 0'/>
+                      <joint name='right-plantar-rod' type='hinge' limited='false'/>
+                      <geom type='mesh' mesh='right-plantar-rod'/>
+                    </body>
+                  </body>
+                  <body name='right-foot' pos='0.408 -0.04 0'>
+                    <inertial pos='0.00474 0.02748 0.00014' mass='0.1498' fullinertia='0.00017388 0.00016793 0.00033261 0.00011814 -1.36e-06 4e-07'/>
+                    <joint name='right-foot' type='hinge' range='-140 -30' damping='1' armature='0.01225'/>
+                    <geom type='mesh' mesh='right-foot'/>
+                    <geom type='capsule' size='0.02' fromto='-0.052821 0.092622 0 0.069746 -0.010224 0' class='collision-right'/>
+                    <site name="right-foot-pt" type="sphere" pos="0.01965 0.05375 0" size="0.005" rgba="0.1 0.7 0.2 1"/>
+                    <site name="right-toe" type="sphere" pos="-0.052821 0.092622 0.0" size="0.005" rgba="0.1 0.7 0.2 1"/>
+                    <site name="right-heel" type="sphere" pos="0.069746 -0.010224 0" size="0.005" rgba="0.1 0.7 0.2 1"/>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <!-- manipulator starts -->
+
+
+      <body name = "softarm" pos="0.02 0 0.05">
+
+
+        <site name="d1_s1" pos="0 0.15 -0.02" />
+        <site name="d1_s2" pos="0.15 0 -0.02" />
+        <site name="d1_s3" pos="0 -0.15 -0.02" />
+        <site name="d1_s4" pos="-0.15 0 -0.02" />
+
+        <site name="d2_s1" pos="0.075 0.13 -0.02" />
+        <site name="d2_s2" pos="0.13 -0.075 -0.02" />
+        <site name="d2_s3" pos="-0.075 -0.13 -0.02" />
+        <site name="d2_s4" pos="-0.13 0.075 -0.02" />
+
+        
+        <site name="d3_s1" pos="0.13 0.075 -0.02" />
+        <site name="d3_s2" pos="0.075 -0.13 -0.02" />
+        <site name="d3_s3" pos="-0.13 -0.075 -0.02" />
+        <site name="d3_s4" pos="-0.075 0.13 -0.02" />
+
+
+
+        
+        <body name="slider_d11" pos="0 -0. -0.02">
+            <joint name="slider_d11" type="slide" axis="0 1 0" damping="10" range="-0.2 0.2"/>
+            <geom name="slider_d11" size=".001"/>
+            <!-- <body name="slider_d11" pos="0 -0. -0.02"> -->
+            <site name="slider_d11" size="0.005"/>
+        </body>
+
+         <body name="slider_d12" pos="0 -0. -0.02">
+            <joint name="slider_d12" type="slide" axis="1 0 0" damping="10" range="-0.2 0.2"/>
+            <geom name="slider_d12" size=".001"/>
+            <site name="slider_d12" size="0.005"/>
+        </body>
+
+
+
+        <body name="slider_d21" pos="0 -0. -0.02">
+            <joint name="slider_d21" type="slide" axis="0.5 0.866 0" damping="10" range="-0.2 0.2"/>
+            <geom name="slider_d21" size=".001"/>
+            <site name="slider_d21" size="0.005"/>
+        </body>
+
+        <body name="slider_d22" pos="0 -0. -0.02">
+            <joint name="slider_d22" type="slide" axis="0.866 -0.5 0" damping="10" range="-0.2 0.2"/>
+            <geom name="slider_d22" size=".001"/>
+            <site name="slider_d22" size="0.005"/>
+        </body>
+
+
+        <body name="slider_d31" pos="0 -0. -0.02">
+            <joint name="slider_d31" type="slide" axis="0.866 0.5 0" damping="10" range="-0.2 0.2"/>
+            <geom name="slider_d31" size=".001"/>
+            <site name="slider_d31" size="0.005"/>
+        </body>
+
+        <body name="slider_d32" pos="0 -0. -0.02">
+            <joint name="slider_d32" type="slide" axis="0.5 -0.866 0" damping="10" range="-0.2 0.2"/>
+            <geom name="slider_d32" size=".001"/>
+            <site name="slider_d32" size="0.005"/>
+        </body>
+        
+        
+    
+        <body name= "diskbase" pos="0 0 0" >
+            <geom name="disk0" type="cylinder" pos="0 0 0" size="0.15 0.00238" rgba="0.5 0.5 0.5 0.1" mass="0.1" group="1"/>
+            
+            
+            <site name="d0d1_s1" pos="0 0.08 0" />
+            <site name="d0d1_s2" pos="0.08 0 0" />
+            <site name="d0d1_s3" pos="0 -0.08 0" />
+            <site name="d0d1_s4" pos="-0.08 0 0" />
+
+           
+            <site name="d0d2_s1" pos="0.0325 0.0563 -0.0" />
+            <site name="d0d2_s2" pos="0.0563 -0.0325 -0.0" />
+            <site name="d0d2_s3" pos="-0.0325 -0.0563 -0.0" />
+            <site name="d0d2_s4" pos="-0.0563 0.0325 -0.0" />
+            
+            <site name="d0d3_s1" pos="0.0433 0.025 -0.0" />
+            <site name="d0d3_s2" pos="0.025 -0.0433 -0.0" />
+            <site name="d0d3_s3" pos="-0.0433 -0.025 -0.0" />
+            <site name="d0d3_s4" pos="-0.025 0.0433 -0.0" />
+        </body>
+
+
+        <composite type="cable" curve="0 0 s" count="147 1 1" size = "0.73" offset="0. 0 .0" initial="fixed">
+            <plugin plugin="mujoco.elasticity.cable">
+                <!--Units are in Pa (SI)-->
+                <config key="twist" value="1e9"/>
+                <config key="bend" value="1e9"/>
+                
+            </plugin>
+            <joint kind="main" damping="10" armature="0.01" frictionloss="1"/>
+            <geom type="capsule" size=".004" mass="0.005" rgba=".5 .5 .5 0.1"/>
+            
+        </composite>
+
+
+
+        
+
+            
+        <body name="disk11" pos="0 0 0.08">
+            <!-- <joint type='slide' axis='1 0 0' limited='false'/>
+            <joint type='slide' axis='0 1 0' limited='false'/>
+            <joint type='slide' axis='0 0 1' limited='false'/>
+            <joint type='ball' limited='false'/> -->
+
+            <joint type='slide' axis='1 0 0' limited='false'/>
+            <joint type='slide' axis='0 1 0' limited='false'/>
+            <joint type='slide' axis='0 0 1' limited='false'/>
+            <joint type='ball' limited='false'/>
+
+
+            <geom name="disk11" type="cylinder" pos="0 0 0" size="0.09 0.00238" rgba="1 1 .99 1" mass="0.01" group="1"/>
+            
+            
+            <site name="d11_s1" pos="0 0.08 0" rgba="0 .7 0 1" group="1"/>
+            <site name="d11_s2" pos="0.08 0 0" rgba="0 .7 0 1" group="1"/>
+            <site name="d11_s3" pos="0 -0.08 0"  rgba="0 .7 0 1" group="1"/>
+            <site name="d11_s4" pos="-0.08 0 0"  rgba="0 .7 0 1" group="1"/>
+
+
+            
+            <site name="d11d2_s1" pos="0.0325 0.0563 0" />
+            <site name="d11d2_s2" pos="0.0563 -0.0325 0" />
+            <site name="d11d2_s3" pos="-0.0325 -0.0563 0" />
+            <site name="d11d2_s4" pos="-0.0563 0.0325 0" />
+
+            
+            <site name="d11d3_s1" pos="0.0433 0.025 0" />
+            <site name="d11d3_s2" pos="0.025 -0.0433 0" />
+            <site name="d11d3_s3" pos="-0.0433 -0.025 0" />
+            <site name="d11d3_s4" pos="-0.025 0.0433 0" />
+        </body>
+
+    
+        <body name="disk12" pos="0 0 0.16">
+            <joint type='slide' axis='1 0 0' limited='false'/>
+            <joint type='slide' axis='0 1 0' limited='false'/>
+            <joint type='slide' axis='0 0 1' limited='false'/>
+            <joint type='ball' limited='false'/>
+            <geom name="disk12" type="cylinder" pos="0 0 0" size="0.09 0.00238" rgba="1 1 .99 1" mass="0.01" group="1"/>
+            
+            
+            <site name="d12_s1" pos="0 0.08 0" rgba="0 .7 0 1" group="1"/>
+            <site name="d12_s2" pos="0.08 0 0" rgba="0 .7 0 1" group="1"/>
+            <site name="d12_s3" pos="0 -0.08 0" rgba="0 .7 0 1" group="1"/>
+            <site name="d12_s4" pos="-0.08 0 0" rgba="0 .7 0 1" group="1"/>
+
+            <site name="d12d2_s1" pos="0.0325 0.0563 0" />
+            <site name="d12d2_s2" pos="0.0563 -0.0325 0" />
+            <site name="d12d2_s3" pos="-0.0325 -0.0563 0" />
+            <site name="d12d2_s4" pos="-0.0563 0.0325 0" />
+            
+            <site name="d12d3_s1" pos="0.0433 0.025 0" />
+            <site name="d12d3_s2" pos="0.025 -0.0433 0" />
+            <site name="d12d3_s3" pos="-0.0433 -0.025 0" />
+            <site name="d12d3_s4" pos="-0.025 0.0433 0" />
+        </body>
+        
+        
+        
+
+        <body name="disk13" pos="0 0 0.24">
+            <joint type='slide' axis='1 0 0' limited='false'/>
+            <joint type='slide' axis='0 1 0' limited='false'/>
+            <joint type='slide' axis='0 0 1' limited='false'/>
+            <joint type='ball' limited='false'/>
+            <geom name="disk13" type="cylinder" pos="0 0 0" size="0.09 0.00238" rgba="1 1 .99 1" mass="0.01" group="1"/>
+            
+            <site name="d13_s1" pos="0 0.08 0" />
+            <site name="d13_s2" pos="0.08 0 0" />
+            <site name="d13_s3" pos="0 -0.08 0" />
+            <site name="d13_s4" pos="-0.08 0 0" />
+
+            <site name="d13d2_s1" pos="0.0325 0.0563 0" />
+            <site name="d13d2_s2" pos="0.0563 -0.0325 0" />
+            <site name="d13d2_s3" pos="-0.0325 -0.0563 0" />
+            <site name="d13d2_s4" pos="-0.0563 0.0325 0" />
+
+            <site name="d13d3_s1" pos="0.0433 0.025 0" />
+            <site name="d13d3_s2" pos="0.025 -0.0433 0" />
+            <site name="d13d3_s3" pos="-0.0433 -0.025 0" />
+            <site name="d13d3_s4" pos="-0.025 0.0433 0" />
+        </body>
+
+
+       
+
+        <body name="disk21" pos="0 0 0.32">
+            <joint type='slide' axis='1 0 0' limited='false'/>
+            <joint type='slide' axis='0 1 0' limited='false'/>
+            <joint type='slide' axis='0 0 1' limited='false'/>
+            <joint type='ball' limited='false'/>
+            <geom name="disk21" type="cylinder" pos="0 0 0" size="0.075 0.00238" rgba="1 1 .99 1" mass="0.01" group="1"/>
+            
+
+            <site name="d21_s1" pos="0.0325 0.0563 0" />
+            <site name="d21_s2" pos="0.0563 -0.0325 0" />
+            <site name="d21_s3" pos="-0.0325 -0.0563 0" />
+            <site name="d21_s4" pos="-0.0563 0.0325 0" />
+
+            <site name="d21d3_s1" pos="0.0433 0.025 0" />
+            <site name="d21d3_s2" pos="0.025 -0.0433 0" />
+            <site name="d21d3_s3" pos="-0.0433 -0.025 0" />
+            <site name="d21d3_s4" pos="-0.025 0.0433 0" />
+        </body>
+
+         <body name="disk22" pos="0 0 0.40">
+            <joint type='slide' axis='1 0 0' limited='false'/>
+            <joint type='slide' axis='0 1 0' limited='false'/>
+            <joint type='slide' axis='0 0 1' limited='false'/>
+            <joint type='ball' limited='false'/>
+            <geom name="disk22" type="cylinder" pos="0 0 0" size="0.075 0.00238" rgba="1 1 .99 1" mass="0.01" group="1"/>
+            
+   
+            <site name="d22_s1" pos="0.0325 0.0563 0" />
+            <site name="d22_s2" pos="0.0563 -0.0325 0" />
+            <site name="d22_s3" pos="-0.0325 -0.0563 0" />
+            <site name="d22_s4" pos="-0.0563 0.0325 0" />
+
+
+            <site name="d22d3_s1" pos="0.0433 0.025 0" />
+            <site name="d22d3_s2" pos="0.025 -0.0433 0" />
+            <site name="d22d3_s3" pos="-0.0433 -0.025 0" />
+            <site name="d22d3_s4" pos="-0.025 0.0433 0" />
+
+        </body>
+
+         <body name="disk23" pos="0 0 0.48">
+            <joint type='slide' axis='1 0 0' limited='false'/>
+            <joint type='slide' axis='0 1 0' limited='false'/>
+            <joint type='slide' axis='0 0 1' limited='false'/>
+            <joint type='ball' limited='false'/>
+            <geom name="disk23" type="cylinder" pos="0 0 0" size="0.075 0.00238" rgba="1 1 .99 1" mass="0.01" group="1"/>
+            
+            <site name="d23_s1" pos="0.0325 0.0563 0" />
+            <site name="d23_s2" pos="0.0563 -0.0325 0" />
+            <site name="d23_s3" pos="-0.0325 -0.0563 0" />
+            <site name="d23_s4" pos="-0.0563 0.0325 0" />
+
+
+            <site name="d23d3_s1" pos="0.0433 0.025 0" />
+            <site name="d23d3_s2" pos="0.025 -0.0433 0" />
+            <site name="d23d3_s3" pos="-0.0433 -0.025 0" />
+            <site name="d23d3_s4" pos="-0.025 0.0433 0" />
+
+
+
+        </body>
+        
+
+
+
+        <body name="disk31" pos="0 0 0.56">
+            <joint type='slide' axis='1 0 0' limited='false'/>
+            <joint type='slide' axis='0 1 0' limited='false'/>
+            <joint type='slide' axis='0 0 1' limited='false'/>
+            <joint type='ball' limited='false'/>
+            <geom name="disk31" type="cylinder" pos="0 0 0" size="0.06 0.00238" rgba="1 1 .99 1" mass="0.01" group="1"/>
+            
+            
+  
+            <site name="d31_s1" pos="0.0433 0.025 0" />
+            <site name="d31_s2" pos="0.025 -0.0433 0" />
+            <site name="d31_s3" pos="-0.0433 -0.025 0" />
+            <site name="d31_s4" pos="-0.025 0.0433 0" />
+        </body>
+
+         <body name="disk32" pos="0 0 0.64">
+            <joint type='slide' axis='1 0 0' limited='false'/>
+            <joint type='slide' axis='0 1 0' limited='false'/>
+            <joint type='slide' axis='0 0 1' limited='false'/>
+            <joint type='ball' limited='false'/>
+            <geom name="disk32" type="cylinder" pos="0 0 0" size="0.06 0.00238" rgba="1 1 .99 1" mass="0.01" group="1"/>
+            
+
+   
+            <site name="d32_s1" pos="0.0433 0.025 0" />
+            <site name="d32_s2" pos="0.025 -0.0433 0" />
+            <site name="d32_s3" pos="-0.0433 -0.025 0" />
+            <site name="d32_s4" pos="-0.025 0.0433 0" />
+        </body>
+
+         <body name="disk33" pos="0 0 0.72">
+            <joint type='slide' axis='1 0 0' limited='false'/>
+            <joint type='slide' axis='0 1 0' limited='false'/>
+            <joint type='slide' axis='0 0 1' limited='false'/>
+            <joint type='ball' limited='false'/>
+            <geom name="disk33" type="cylinder" pos="0 0 0" size="0.06 0.00238" rgba="1 1 .99 1" mass="0.01" group="1"/>
+            
+            <site name="d33_s1" pos="0.0433 0.025 0" />
+            <site name="d33_s2" pos="0.025 -0.0433 0" />
+            <site name="d33_s3" pos="-0.0433 -0.025 0" />
+            <site name="d33_s4" pos="-0.025 0.0433 0" />
+
+            <site name="end-effector" pos = "0 0 0.05" size="0.005" rgba="1 0 0 1" />
+        </body>
+
+      </body>
+      
+      <!-- manipulator ends -->
+      
+    </body>
+
+    <!-- Add any other moving bodies after the Cassie definition -->
+    <!-- Stairs -->
+    <!-- <geom name='box1' pos='1.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box2' pos='2.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box3' pos='3.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box4' pos='4.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box5' pos='5.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box6' pos='6.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box7' pos='7.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box8' pos='8.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box9' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box10' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box11' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box12' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box13' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box14' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box15' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/> -->
+  </worldbody>
+
+  <equality>
+    <connect name = 'left-plantar-rod-eq' body1='left-plantar-rod'  body2='left-foot'        anchor='0.35012 0 0'/>
+    <connect name = 'left-achilles-rod-eq' body1='left-achilles-rod' body2='left-heel-spring' anchor='0.5012 0 0'/>
+    <connect name = 'right-plantar-rod-eq' body1='right-plantar-rod'  body2='right-foot'        anchor='0.35012 0 0'/>
+    <connect name = 'right-achilles-rod-eq' body1='right-achilles-rod' body2='right-heel-spring' anchor='0.5012 0 0'/>
+
+    <weld name="right_boundary00" body1="B_first" body2="diskbase" anchor="0.0 0 0"/>
+    <weld name="right_boundary10" body1="B_15" body2="disk11" anchor="0.0 0 0"/>
+    <weld name="right_boundary12" body1="B_16" body2="disk11" anchor="0.0 0 0"/>
+    <weld name="right_boundary13" body1="B_17" body2="disk11" anchor="0.0 0 0"/>
+    <weld name="right_boundary20" body1="B_31" body2="disk12" anchor="0.0 0 0"/>
+    <weld name="right_boundary22" body1="B_32" body2="disk12" anchor="0.0 0 0"/>
+    <weld name="right_boundary23" body1="B_33" body2="disk12" anchor="0.0 0 0"/>
+    <weld name="right_boundary30" body1="B_47" body2="disk13" anchor="0.0 0 0"/>
+    <weld name="right_boundary32" body1="B_48" body2="disk13" anchor="0.0 0 0"/>
+    <weld name="right_boundary33" body1="B_49" body2="disk13" anchor="0.0 0 0"/>
+    
+    
+    
+    <weld name="right_boundary40" body1="B_63" body2="disk21" anchor="0.0 0 0"/>
+    <weld name="right_boundary42" body1="B_64" body2="disk21" anchor="0.0 0 0"/>
+    <weld name="right_boundary43" body1="B_65" body2="disk21" anchor="0.0 0 0"/>
+    <weld name="right_boundary50" body1="B_79" body2="disk22" anchor="0.0 0 0"/>
+    <weld name="right_boundary52" body1="B_80" body2="disk22" anchor="0.0 0 0"/>
+    <weld name="right_boundary53" body1="B_81" body2="disk22" anchor="0.0 0 0"/>
+    <weld name="right_boundary600" body1="B_94" body2="disk23" anchor="0.0 0 0"/>
+    <weld name="right_boundary60" body1="B_95" body2="disk23" anchor="0.0 0 0"/>
+    <weld name="right_boundary62" body1="B_96" body2="disk23" anchor="0.0 0 0"/>
+    <weld name="right_boundary63" body1="B_97" body2="disk23" anchor="0.0 0 0"/>
+
+    <weld name="right_boundary70" body1="B_111" body2="disk31" anchor="0.0 0 0"/>
+    <weld name="right_boundary72" body1="B_112" body2="disk31" anchor="0.0 0 0"/>
+    <weld name="right_boundary73" body1="B_113" body2="disk31" anchor="0.0 0 0"/>
+    <weld name="right_boundary80" body1="B_127" body2="disk32" anchor="0.0 0 0"/>
+    <weld name="right_boundary82" body1="B_128" body2="disk32" anchor="0.0 0 0"/>
+    <weld name="right_boundary83" body1="B_129" body2="disk32" anchor="0.0 0 0"/>
+    <weld name="right_boundary900" body1="B_142" body2="disk33" anchor="0.0 0 0"/>
+    <weld name="right_boundary90" body1="B_143" body2="disk33" anchor="0.0 0 0"/>
+    <weld name="right_boundary92" body1="B_144" body2="disk33" anchor="0.0 0 0"/>
+    <weld name="right_boundary93" body1="B_last" body2="disk33" anchor="0.0 0 0"/>
+
+  </equality>
+
+  <contact>
+    <exclude body1="B_first" body2="diskbase"/>
+        
+        <exclude body1="B_15" body2="disk11"/>
+        <exclude body1="B_16" body2="disk11"/>
+        <exclude body1="B_17" body2="disk11"/>
+        <exclude body1="B_31" body2="disk12"/>
+        <exclude body1="B_32" body2="disk12"/>
+        <exclude body1="B_33" body2="disk12"/>
+        <exclude body1="B_47" body2="disk13"/>
+        <exclude body1="B_48" body2="disk13"/>
+        <exclude body1="B_49" body2="disk13"/>
+      
+
+        <exclude body1="B_63" body2="disk21"/>
+        <exclude body1="B_64" body2="disk21"/>
+        <exclude body1="B_65" body2="disk21"/>
+        <exclude body1="B_79" body2="disk22"/>
+        <exclude body1="B_80" body2="disk22"/>
+        <exclude body1="B_81" body2="disk22"/>
+        <exclude body1="B_95" body2="disk23"/>
+        <exclude body1="B_96" body2="disk23"/>
+        <exclude body1="B_97" body2="disk23"/>
+
+
+        <exclude body1="B_111" body2="disk31"/>
+        <exclude body1="B_112" body2="disk31"/>
+        <exclude body1="B_113" body2="disk31"/>
+        <exclude body1="B_127" body2="disk32"/>
+        <exclude body1="B_128" body2="disk32"/>
+        <exclude body1="B_129" body2="disk32"/>
+        <exclude body1="B_143" body2="disk33"/>
+        <exclude body1="B_144" body2="disk33"/>
+        <exclude body1="B_last" body2="disk33"/>
+
+        <exclude body1="slider_d11" body2="slider_d12"/>
+        <exclude body1="slider_d11" body2="slider_d21"/>
+        <exclude body1="slider_d12" body2="slider_d21"/>
+
+        <exclude body1="slider_d11" body2="slider_d22"/>
+        <exclude body1="slider_d12" body2="slider_d22"/>
+        <exclude body1="slider_d21" body2="slider_d22"/>
+
+
+        <exclude body1="slider_d11" body2="slider_d31"/>
+        <exclude body1="slider_d12" body2="slider_d31"/>
+        <exclude body1="slider_d21" body2="slider_d31"/>
+        <exclude body1="slider_d22" body2="slider_d31"/>
+
+        <exclude body1="slider_d11" body2="slider_d32"/>
+        <exclude body1="slider_d12" body2="slider_d32"/>
+        <exclude body1="slider_d21" body2="slider_d32"/>
+        <exclude body1="slider_d22" body2="slider_d32"/>
+        <exclude body1="slider_d31" body2="slider_d32"/>
+
+        <!-- <exclude body1="softarm" body2="floor"/> -->
+        <exclude body1="softarm" body2="cassie-pelvis"/>
+  </contact>
+
+  <tendon >
+        <!-- <spatial name="d1_t1" limited="true" range="0.45 0.47" width="0.001" rgba=".5 .5 .5 1"> -->
+            <spatial name="d1_t1"  limited="true" range="0.463 0.464" width="0.001" rgba=".5 .5 .5 1">
+            <site site="d13_s1"/>
+            <site site="d12_s1"/>
+            <site site="d11_s1"/>
+            <site site="d0d1_s1"/>
+            <site site="d1_s1"/>
+            <site site="slider_d11"/>
+        </spatial>
+
+        
+        <!-- <spatial name="d1_t3" limited="true"  range="0.45 0.47" width="0.001" rgba=".5 .5 .5 1"> -->
+            <spatial name="d1_t3"  limited="true" range="0.463 0.464" width="0.001" rgba=".5 .5 .5 1">
+            <site site="d13_s3"/>
+            <site site="d12_s3"/>
+            <site site="d11_s3"/>
+            <site site="d0d1_s3"/>
+            <site site="d1_s3"/>
+            <site site="slider_d11"/>
+        </spatial>
+ 
+
+         <!-- <spatial name="d1_t2" limited="true"  range="0.45 0.47" width="0.001" rgba=".5 .5 .5 1"> -->
+            <spatial name="d1_t2"  limited="true" range="0.463 0.464" width="0.001" rgba=".5 .5 .5 1">
+            <site site="d13_s2"/>
+            <site site="d12_s2"/>
+            <site site="d11_s2"/>
+            <site site="d0d1_s2"/>
+            <site site="d1_s2"/>
+            <site site="slider_d12"/>
+        </spatial>
+        
+         <!-- <spatial name="d1_t4" limited="true"  range="0.45 0.47" width="0.001" rgba=".5 .5 .5 1"> -->
+            <spatial name="d1_t4"  limited="true" range="0.463 0.464" width="0.001" rgba=".5 .5 .5 1">
+            <site site="d13_s4"/>
+            <site site="d12_s4"/>
+            <site site="d11_s4"/>
+            <site site="d0d1_s4"/>
+            <site site="d1_s4"/>
+            <site site="slider_d12"/>
+        </spatial>
+
+
+        <!-- <spatial name="d2_t1" limited="true" range="0.71 0.73" width="0.001" rgba="1 0 0 1"> -->
+            <spatial name="d2_t1" limited="true" range="0.718 0.719" width="0.001" rgba="1 0 0 1">
+            <site site="d23_s1"/>
+            <site site="d21_s1"/>
+            <site site="d13d2_s1"/>
+            <site site="d12d2_s1"/>
+            <site site="d11d2_s1"/>
+            <site site="d0d2_s1"/>
+            <site site="d2_s1"/>
+            <site site="slider_d21"/>
+        </spatial>
+
+        <!-- <spatial name="d2_t3" limited="true"  range="0.71 0.73" width="0.001" rgba="1 0 0 1"> -->
+            <spatial name="d2_t3" limited="true" range="0.718 0.719" width="0.001" rgba="1 0 0 1">
+            <site site="d23_s3"/>
+            <site site="d22_s3"/>
+            <site site="d21_s3"/>
+            <site site="d13d2_s3"/>
+            <site site="d12d2_s3"/>
+            <site site="d11d2_s3"/>
+            <site site="d0d2_s3"/>
+            <site site="d2_s3"/>
+            <site site="slider_d21"/>
+        </spatial>
+
+
+        <!-- <spatial name="d2_t2" limited="true"  range="0.71 0.73" width="0.001" rgba="1 0 0 1"> -->
+            <spatial name="d2_t2" limited="true" range="0.718 0.719" width="0.001" rgba="1 0 0 1">
+            <site site="d23_s2"/>
+            <site site="d22_s2"/>
+            <site site="d21_s2"/>
+            <site site="d13d2_s2"/>
+            <site site="d12d2_s2"/>
+            <site site="d11d2_s2"/>
+            <site site="d0d2_s2"/>
+            <site site="d2_s2"/>
+            <site site="slider_d22"/>
+        </spatial>
+
+        <!-- <spatial name="d2_t4" limited="true" stiffness="500" range="0.71 0.73" width="0.001" rgba="1 0 0 1"> -->
+            <spatial name="d2_t4" limited="true" range="0.718 0.719" width="0.001" rgba="1 0 0 1">
+            <site site="d23_s4"/>
+            <site site="d22_s4"/>
+            <site site="d21_s4"/>
+            <site site="d13d2_s4"/>
+            <site site="d12d2_s4"/>
+            <site site="d11d2_s4"/>
+            <site site="d0d2_s4"/>
+            <site site="d2_s4"/>
+            <site site="slider_d22"/>
+        </spatial>
+
+
+
+        <!-- <spatial name="d3_t1" limited="true"  range="0.96 0.98" width="0.001" rgba="0 1 0 1"> -->
+            <spatial name="d3_t1"  limited="true" range="0.973 0.974" width="0.001" rgba="0 1 0 1">
+            <site site="d33_s1"/>
+            <site site="d32_s1"/>
+            <site site="d31_s1"/>
+            <site site="d23d3_s1"/>
+            <site site="d22d3_s1"/>
+            <site site="d21d3_s1"/>
+            <site site="d13d3_s1"/>
+            <site site="d12d3_s1"/>
+            <site site="d11d3_s1"/>
+            <site site="d0d3_s1"/>
+            <site site="d3_s1"/>
+            <site site="slider_d31"/>
+        </spatial>
+
+        <!-- <spatial name="d3_t2" limited="true"  range="0.96 0.98" width="0.001" rgba="0 1 0 1"> -->
+            <spatial name="d3_t2"  limited="true" range="0.973 0.974" width="0.001" rgba="0 1 0 1">
+            <site site="d33_s2"/>
+            <site site="d32_s2"/>
+            <site site="d31_s2"/>
+            <site site="d23d3_s2"/>
+            <site site="d22d3_s2"/>
+            <site site="d21d3_s2"/>
+            <site site="d13d3_s2"/>
+            <site site="d12d3_s2"/>
+            <site site="d11d3_s2"/>
+            <site site="d0d3_s2"/>
+            <site site="d3_s2"/>
+            <site site="slider_d32"/>
+        </spatial>
+
+        <!-- <spatial name="d3_t3" limited="true"  range="0.96 0.98" width="0.001" rgba="0 1 0 1"> -->
+            
+            <spatial name="d3_t3"  limited="true" range="0.973 0.974" width="0.001" rgba="0 1 0 1">
+            
+            <site site="d33_s3"/>
+            <site site="d32_s3"/>
+            <site site="d31_s3"/>
+            <site site="d23d3_s3"/>
+            <site site="d22d3_s3"/>
+            <site site="d21d3_s3"/>
+            <site site="d13d3_s3"/>
+            <site site="d12d3_s3"/>
+            <site site="d11d3_s3"/>
+            <site site="d0d3_s3"/>
+            <site site="d3_s3"/>
+            <site site="slider_d31"/>
+        </spatial>
+
+
+        
+        <!-- <spatial name="d3_t4" limited="true"  range="0.96 0.98" width="0.001" rgba="0 1 0 1"> -->
+
+            <spatial name="d3_t4"  limited="true" range="0.973 0.974" width="0.001" rgba="0 1 0 1">
+            <site site="d33_s4"/>
+            <site site="d32_s4"/>
+            <site site="d31_s4"/>
+            <site site="d23d3_s4"/>
+            <site site="d22d3_s4"/>
+            <site site="d21d3_s4"/>
+            <site site="d13d3_s4"/>
+            <site site="d12d3_s4"/>
+            <site site="d11d3_s4"/>
+            <site site="d0d3_s4"/>
+            <site site="d3_s4"/>
+            <site site="slider_d32"/>
+        </spatial>
+
+
+
+    </tendon>
+
+  <actuator>
+    <!-- User parameter is the maximum no-load motor RPM -->
+    <motor name='left-hip-roll'  joint='left-hip-roll'  gear='25' ctrllimited='true' ctrlrange='-4.5 4.5'   user='2900'/>
+    <motor name='left-hip-yaw'   joint='left-hip-yaw'   gear='25' ctrllimited='true' ctrlrange='-4.5 4.5'   user='2900'/>
+    <motor name='left-hip-pitch' joint='left-hip-pitch' gear='16' ctrllimited='true' ctrlrange='-12.2 12.2' user='1300'/>
+    <motor name='left-knee'      joint='left-knee'      gear='16' ctrllimited='true' ctrlrange='-12.2 12.2' user='1300'/>
+    <motor name='left-foot'      joint='left-foot'      gear='50' ctrllimited='true' ctrlrange='-0.9 0.9'   user='5500'/>
+    <motor name='right-hip-roll'  joint='right-hip-roll'  gear='25' ctrllimited='true' ctrlrange='-4.5 4.5'   user='2900'/>
+    <motor name='right-hip-yaw'   joint='right-hip-yaw'   gear='25' ctrllimited='true' ctrlrange='-4.5 4.5'   user='2900'/>
+    <motor name='right-hip-pitch' joint='right-hip-pitch' gear='16' ctrllimited='true' ctrlrange='-12.2 12.2' user='1300'/>
+    <motor name='right-knee'      joint='right-knee'      gear='16' ctrllimited='true' ctrlrange='-12.2 12.2' user='1300'/>
+    <motor name='right-foot'      joint='right-foot'      gear='50' ctrllimited='true' ctrlrange='-0.9 0.9'   user='5500'/>
+
+    <position name="slider_d11" joint="slider_d11" ctrllimited="true"  ctrlrange="-0.15 0.15"  kp="200"/>
+    <position name="slider_d12" joint="slider_d12" ctrllimited="true"  ctrlrange="-0.15 0.15"  kp="200"/>
+    
+    <position name="slider_d21" joint="slider_d21"  ctrllimited="true" ctrlrange="-0.25 0.25"  kp="200"/>
+    <position name="slider_d22" joint="slider_d22"  ctrllimited="true" ctrlrange="-0.25 0.25"  kp="200"/>
+    
+    <position name="slider_d31" joint="slider_d31"  ctrllimited="true" ctrlrange="-0.35 0.35"  kp="200"/>
+    <position name="slider_d32" joint="slider_d32"  ctrllimited="true" ctrlrange="-0.35 0.35"  kp="200"/>
+
+  </actuator>
+
+  <sensor>
+    <!-- User parameter is the number of absolute encoder bits -->
+    <actuatorpos name='left-hip-roll-input'  actuator='left-hip-roll'  user='13'/>
+    <actuatorpos name='left-hip-yaw-input'   actuator='left-hip-yaw'   user='13'/>
+    <actuatorpos name='left-hip-pitch-input' actuator='left-hip-pitch' user='13'/>
+    <actuatorpos name='left-knee-input'      actuator='left-knee'      user='13'/>
+    <actuatorpos name='left-foot-input'      actuator='left-foot'      user='18'/>
+    <jointpos    name='left-shin-output'     joint='left-shin'         user='18' noise='2e-4'/>
+    <jointpos    name='left-tarsus-output'   joint='left-tarsus'       user='18' noise='2e-4'/>
+    <jointpos    name='left-foot-output'     joint='left-foot'         user='13'/>
+    <actuatorpos name='right-hip-roll-input'  actuator='right-hip-roll'   user='13'/>
+    <actuatorpos name='right-hip-yaw-input'   actuator='right-hip-yaw'    user='13'/>
+    <actuatorpos name='right-hip-pitch-input' actuator='right-hip-pitch'  user='13'/>
+    <actuatorpos name='right-knee-input'      actuator='right-knee'       user='13'/>
+    <actuatorpos name='right-foot-input'      actuator='right-foot'       user='18'/>
+    <jointpos    name='right-shin-output'     joint='right-shin'          user='18' noise='2e-4'/>
+    <jointpos    name='right-tarsus-output'   joint='right-tarsus'        user='18' noise='2e-4'/>
+    <jointpos    name='right-foot-output'     joint='right-foot'          user='13'/>
+    
+    <framepos      name="end-effector-pos" objtype="site" objname="end-effector"/>
+    <framelinvel   name="end-effector-vel" objtype="site" objname="end-effector"/>
+    <framequat     name='end-effector-orientation' objtype='site' objname='end-effector'/>
+    <gyro          name='end-effector-angular-velocity'    site='end-effector' noise='5e-4' cutoff='34.9'/>
+    <accelerometer name='end-effector-linear-acceleration' site='end-effector' noise='1e-2' cutoff='157'/>
+    <framepos      name='pelvis-pose' objtype='site' objname='imu'/>
+    <framelinvel      name='pelvis-vel' objtype='site' objname='imu'/>
+    <framequat     name='pelvis-orientation' objtype='site' objname='imu'/>
+    <gyro          name='pelvis-angular-velocity'    site='imu' noise='5e-4' cutoff='34.9'/>
+    <accelerometer name='pelvis-linear-acceleration' site='imu' noise='1e-2' cutoff='157'/>
+    <magnetometer  name='pelvis-magnetometer'        site='imu'/>
+
+    <framepos      name='right-foot-pos' objtype='site' objname='right-foot-pt'/>
+    <framequat     name='right-foot-orientation' objtype='site' objname='right-foot-pt'/>
+    <framepos      name='right-toe-pos' objtype='site' objname='right-toe'/>
+    <framequat     name='right-toe-orientation' objtype='site' objname='right-toe'/>
+    <framepos      name='right-heel-pos' objtype='site' objname='right-heel'/>
+    <framequat     name='right-heel-orientation' objtype='site' objname='right-heel'/>
+
+    <framepos      name='left-foot-pos' objtype='site' objname='left-foot-pt'/>
+    <framequat     name='left-foot-orientation' objtype='site' objname='left-foot-pt'/>
+    <framepos      name='left-toe-pos' objtype='site' objname='left-toe'/>
+    <framequat     name='left-toe-orientation' objtype='site' objname='left-toe'/>
+    <framepos      name='left-heel-pos' objtype='site' objname='left-heel'/>
+    <framequat     name='left-heel-orientation' objtype='site' objname='left-heel'/>
+    <!-- <rangefinder   name='range1'                     site='range1' noise='1e-2' cutoff='1'/>
+    <rangefinder   name='range2'                     site='range2' noise='1e-2' cutoff='1'/>
+    <rangefinder   name='range3'                     site='range3' noise='1e-2' cutoff='1'/>
+    <rangefinder   name='range4'                     site='range4' noise='1e-2' cutoff='1'/>
+    <rangefinder   name='range5'                     site='range5' noise='1e-2' cutoff='1'/>
+    <rangefinder   name='range6'                     site='range6' noise='1e-2' cutoff='1'/> -->
+
+    <tendonpos name = "d1_t1" tendon="d1_t1" />
+    <tendonpos name = "d1_t2" tendon="d1_t1" />
+    <tendonpos name = "d1_t3" tendon="d1_t1" />
+    <tendonpos name = "d1_t4" tendon="d1_t1" />
+
+    <tendonpos name = "d2_t1" tendon="d1_t1" />
+    <tendonpos name = "d2_t2" tendon="d1_t1" />
+    <tendonpos name = "d2_t3" tendon="d1_t1" />
+    <tendonpos name = "d2_t4" tendon="d1_t1" />
+
+    <tendonpos name = "d3_t1" tendon="d1_t1" />
+    <tendonpos name = "d3_t2" tendon="d1_t1" />
+    <tendonpos name = "d3_t3" tendon="d1_t1" />
+    <tendonpos name = "d3_t4" tendon="d1_t1" />
+
+    
+
+    <framepos name="disk11-pose" objtype="body" objname="disk11"/>
+    <framequat name="disk11-ori" objtype="body" objname="disk11"/>
+
+    <framepos name="disk12-pose" objtype="body" objname="disk12"/>
+    <framequat name="disk12-ori" objtype="body" objname="disk12"/>
+
+    <framepos name="disk13-pose" objtype="body" objname="disk13"/>
+    <framequat name="disk13-ori" objtype="body" objname="disk13"/>
+
+    <framepos name="disk21-pose" objtype="body" objname="disk21"/>
+    <framequat name="disk21-ori" objtype="body" objname="disk21"/>
+
+    <framepos name="disk22-pose" objtype="body" objname="disk22"/>
+    <framequat name="disk22-ori" objtype="body" objname="disk22"/>
+
+    <framepos name="disk23-pose" objtype="body" objname="disk23"/>
+    <framequat name="disk23-ori" objtype="body" objname="disk23"/>
+
+    <framepos name="disk31-pose" objtype="body" objname="disk31"/>
+    <framequat name="disk31-ori" objtype="body" objname="disk31"/>
+
+    <framepos name="disk32-pose" objtype="body" objname="disk32"/>
+    <framequat name="disk32-ori" objtype="body" objname="disk32"/>
+
+    <framepos name="disk33-pose" objtype="body" objname="disk33"/>
+    <framequat name="disk33-ori" objtype="body" objname="disk33"/>
+
+    <jointpos name="slider_d11" joint="slider_d11"/>
+    <jointpos name="slider_d12" joint="slider_d12"/>
+    <jointpos name="slider_d21" joint="slider_d21"/>
+    <jointpos name="slider_d22" joint="slider_d22"/>
+    <jointpos name="slider_d31" joint="slider_d31"/>
+    <jointpos name="slider_d32" joint="slider_d32"/>
+
+
+  </sensor>
+
+</mujoco>

@@ -1,0 +1,207 @@
+<mujoco model='arm'>
+  <compiler inertiafromgeom='auto' angle='degree' eulerseq='zyx' meshdir='xml/cassie-stl-meshes' autolimits='true'/>
+  <size nuser_actuator='1' nuser_sensor='1' nuser_geom='1'/>
+  <!-- <option timestep='0.0005' iterations='50' solver='PGS' gravity='0 0 -9.81'/> -->
+  <option timestep='0.0005' iterations='50' solver='PGS' integrator='implicitfast' gravity='0 0 -9.81'/>
+  <!-- Timestep is set to 0.0005 because our controller runs at 2 kHz -->
+  <!-- Larger values still have stable dynamics -->
+
+  <visual>
+    <quality shadowsize='4096'/>
+    <map znear='0.05'/>
+  </visual>
+
+  
+
+  <default>
+    <joint limited='true'/>
+    <motor ctrllimited='true'/>
+    <geom contype='0' conaffinity='0' condim='1' solref='0.005 1'/>
+    <equality solref='0.005 1'/>
+    <default class='arm'>
+      <geom material='cassie'/>
+    </default>
+    <default class='collision'>
+      <!-- User parameter for geoms is used to identify collision types -->
+      <geom material='collision' contype='1' user='2'/>
+      <default class='collision-left'>
+        <geom contype='2' conaffinity='4'/>
+      </default>
+      <default class='collision-right'>
+        <geom contype='4' conaffinity='2'/>
+      </default>
+    </default>
+    <default class='obstacle'>
+      <geom material='obstacle' condim='3' contype='8' conaffinity='15' user='1'/>
+    </default>
+  </default>
+
+  <asset>
+    <texture type='skybox' builtin='gradient' width='128' height='128' rgb1='0.4 0.6 0.8' rgb2='0 0 0'/>
+    <texture name='plane' type='2d' builtin='checker' rgb1='0.2 0.2 0.2' rgb2='0.3 0.3 0.3' width='512' height='512'/>
+    <material name='plane' reflectance='0.0' texture='plane' texrepeat='1 1' texuniform='true'/>
+    <material name='cassie'    rgba='0.9 0.5 0.1 1'/>
+    <material name='collision' rgba='0.1 0.5 0.9 0'/>
+    <material name='obstacle'  rgba='0.2 0.6 0.2 1'/>
+
+    <mesh name="base_link" file="base_link.stl" />
+    <mesh name="shoulder_link" file="shoulder_link.stl" />
+    <mesh name="bicep_link" file="bicep_link.stl" />
+    <mesh name="forearm_link" file="forearm_link.stl" />
+    <mesh name="spherical_wrist_1_link" file="spherical_wrist_1_link.stl" />
+    <mesh name="spherical_wrist_2_link" file="spherical_wrist_2_link.stl" />
+    <mesh name="bracelet_no_vision_link" file="bracelet_no_vision_link.stl" />
+  </asset>
+
+  <worldbody>
+    <geom name='floor' pos='0.001 0 -1.0' size='100 10 .125' type='plane' material='plane' condim='3' conaffinity='15'/>
+
+    <light mode='trackcom' pos='0 0 5' dir='0 0 -1'/>
+    <light directional='true' pos='0 0 3' dir='0 0 -1' diffuse='0.2 0.2 0.2' specular='0 0 0'/>
+
+    <body name='arm-base' pos='0 0 1.10' childclass='arm'>
+      <camera name='track' pos='0 -3 1' zaxis='0 -1 0.5' mode='track'/>
+      <!--camera name='track' pos='-3 0 0' xyaxes='0 -1 0 0 0 1' mode='track'/-->
+      <inertial pos='0.05066 0.000346 0.02841' mass='10.33' fullinertia='0.085821 0.049222 0.08626 1.276e-05 -0.00016022 -0.000414'/>
+      <!-- <joint type='slide' axis='1 0 0' limited='false'/>
+      <joint type='slide' axis='0 1 0' limited='false'/>
+      <joint type='slide' axis='0 0 1' limited='false' ref='1.01'/>
+      <joint type='ball' limited='false'/> -->
+      <!-- <geom type='cylinder' size='0.1 0.01'/> -->
+      <geom name='arm-base-geom' type='sphere' size='0.15' pos='0.02 0 0.02' class='collision'/>
+      <site name='imu' size='0.01' pos='0.03155 0 -0.07996'/>
+
+      <site name='range1' type='cylinder' size='0.005 0.1 0.005' rgba='0.5 0.5 0.5 1' fromto='0 0 -0.1 0.02452 0 -0.10488'/>
+      <site name='range2' type='cylinder' size='0.005 0.1 0.005' rgba='0.5 0.5 0.5 1' fromto='0 0 -0.1 0.02031 0 -0.10957'/>
+      <site name='range3' type='cylinder' size='0.005 0.1 0.005' rgba='0.5 0.5 0.5 1' fromto='0 0 -0.1 0.02079 0 -0.11389'/>
+      <site name='range4' type='cylinder' size='0.005 0.1 0.005' rgba='0.5 0.5 0.5 1' fromto='0 0 -0.1 0.01768 0 -0.11768'/>
+      <site name='range5' type='cylinder' size='0.005 0.1 0.005' rgba='0.5 0.5 0.5 1' fromto='0 0 -0.1 0.01389 0 -0.12079'/>
+      <site name='range6' type='cylinder' size='0.005 0.1 0.005' rgba='0.5 0.5 0.5 1' fromto='0 0 -0.1 0.00957 0 -0.12310'/>
+
+      <body name="base_link" pos="0 0 0.15">
+        <inertial pos="-0.000648 -0.000166 0.084487" quat="0.999294 0.00139618 -0.0118387 0.035636" mass="1.697" diaginertia="0.00462407 0.00449437 0.00207755" />
+        <geom name='base' type="mesh" contype="7" conaffinity="1" group="1" rgba="0.75294 0.75294 0.75294 1" mesh="base_link" />
+        <body name="shoulder_link" pos="0 0 0.15643" quat="-3.67321e-06 -1 0 0">
+          <inertial pos="-2.3e-05 -0.010364 -0.07336" quat="0.707051 0.0451246 -0.0453544 0.704263" mass="1.377" diaginertia="0.00488868 0.00457 0.00135132" />
+          <joint name="joint-a1" pos="0 0 0" axis="0 0 1" limited="true" range="-180 180" />
+          <geom type="mesh" contype="7" conaffinity="1" group="1" rgba="0.75294 0.75294 0.75294 1" mesh="shoulder_link" />
+          <body name="bicep_link" pos="0 0.005375 -0.12838" quat="0.707105 0.707108 0 0">
+            <inertial pos="3.5e-05 -0.208207 -0.01889" quat="0.499531 0.50049 -0.500566 0.499411" mass="1.262" diaginertia="0.0471882 0.046752 0.000849791" />
+            <joint name="joint-a2" pos="0 0 0" axis="0 0 1" limited="true" range="-138 138" />
+            <geom type="mesh" contype="7" conaffinity="1" group="1" rgba="0.75294 0.75294 0.75294 1" mesh="bicep_link" />
+            <body name="forearm_link" pos="0 -0.41 0" quat="-3.67321e-06 1 0 0">
+              <inertial pos="1.8e-05 0.076168 -0.01397" quat="0.513497 0.485985 -0.486188 0.513577" mass="0.93" diaginertia="0.00848774 0.008292 0.000604256" />
+              <joint name="joint-a3" pos="0 0 0" axis="0 0 1" limited="true" range="-152.4 152.4" />
+              <geom type="mesh" contype="7" conaffinity="1" group="1" rgba="0.75294 0.75294 0.75294 1" mesh="forearm_link" />
+              <body name="spherical_wrist_1_link" pos="0 0.20843 -0.006375" quat="0.707105 0.707108 0 0">
+                <inertial pos="-1e-06 0.008486 -0.062937" quat="0.704382 -0.062019 0.062019 0.704382" mass="0.678" diaginertia="0.00170753 0.001645 0.000347472" />
+                <joint name="joint-a4" pos="0 0 0" axis="0 0 1" limited="true" range="-180 180" />
+                <geom type="mesh" contype="7" conaffinity="1" group="1" rgba="0.75294 0.75294 0.75294 1" mesh="spherical_wrist_1_link" />
+                <body name="spherical_wrist_2_link" pos="0 -0.00017505 -0.10593" quat="0.707105 -0.707108 0 0">
+                  <inertial pos="-1e-06 0.046429 -0.008704" quat="0.5446 0.451011 -0.451011 0.5446" mass="0.678" diaginertia="0.00174437 0.001685 0.000351632" />
+                  <joint name="joint-a5" pos="0 0 0" axis="0 0 1" limited="true" range="-128 128" />
+                  <geom type="mesh" contype="7" conaffinity="1" group="1" rgba="0.75294 0.75294 0.75294 1" mesh="spherical_wrist_2_link" />
+                  <body name="bracelet_link" pos="0 0.10593 -0.00017505" quat="0.707105 0.707108 0 0">
+                    <inertial pos="-9.3e-05 0.000132 -0.022905" quat="-0.0368025 0.719402 -0.0444884 0.69219" mass="0.364" diaginertia="0.00024027 0.000222769 0.000213961" />
+                    <joint name="joint-a6" pos="0 0 0" axis="0 0 1" limited="true" range="-180 180" />
+                    <geom type="mesh" contype="7" conaffinity="1" group="1" rgba="0.75294 0.75294 0.75294 1" mesh="bracelet_no_vision_link" />
+                    <!-- <site name="end-effector" pos="0 0 0.01" size="0.01" rgba="0.9 0.5 0.1 1" /> -->
+                    <!-- <geom name='ee' type='sphere' size='0.01' class='collision'/> -->
+                    <body name="end-effector-body" pos="0 0 0.01">
+                      <geom name='ee' type='sphere' size='0.01' class='collision'/>
+                      <site name="end-effector" pos="0 0 0.0" size="0.01" rgba="0.9 0.5 0.1 1" />
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <!-- Add any other moving bodies after the Cassie definition -->
+    <!-- Stairs -->
+    <!-- <geom name='box1' pos='1.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box2' pos='2.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box3' pos='3.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box4' pos='4.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box5' pos='5.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box6' pos='6.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box7' pos='7.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box8' pos='8.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box9' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box10' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box11' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box12' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box13' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box14' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/>
+    <geom name='box15' pos='9.1 20 0.01' size='1 1 1' type='box' condim='3' conaffinity='15'/> -->
+  </worldbody>
+
+  <equality>
+  </equality>
+
+  <actuator>
+    <!-- User parameter is the maximum no-load motor RPM -->
+    <!-- <motor name="shoulder-link" joint="joint-a1" gear="1 0 0 0 0 0" ctrlrange="-50 50" forcerange="-39 39"/>
+    <motor name="bicep-link" joint="joint-a2" gear="1 0 0 0 0 0" ctrlrange="-50 50" forcerange="-39 39"/>
+    <motor name="forearm-link" joint="joint-a3" gear="1 0 0 0 0 0" ctrlrange="-50 50" forcerange="-39 39"/>
+    <motor name="sphericalWrist1-link" joint="joint-a4" gear="1 0 0 0 0 0" ctrlrange="-50 50" forcerange="-9 9"/>
+    <motor name="sphericalWrist2-link" joint="joint-a5" gear="1 0 0 0 0 0" ctrlrange="-50 50" forcerange="-9 9"/>
+    <motor name="bracelet-link" joint="joint-a6" gear="1 0 0 0 0 0" ctrlrange="-50 50" forcerange="-9 9"/> -->
+
+    <position name="shoulder-link" joint="joint-a1" gear="1 0 0 0 0 0"  ctrlrange="-3.14159 3.14159" kp='1000'/>
+    <position name="bicep-link" joint="joint-a2" gear="1 0 0 0 0 0"  ctrlrange="-2.40855 2.40855" kp='1000'/>
+    <position name="forearm-link" joint="joint-a3" gear="1 0 0 0 0 0"  ctrlrange="-2.659881 2.659881" kp='1000'/>
+    <position name="sphericalWrist1-link" joint="joint-a4" gear="1 0 0 0 0 0"  ctrlrange="-3.14159 3.14159" kp='1000'/>
+    <position name="sphericalWrist2-link" joint="joint-a5" gear="1 0 0 0 0 0"   ctrlrange="-2.23402 2.23402" kp='1000'/>
+    <position name="bracelet-link" joint="joint-a6" gear="1 0 0 0 0 0"  ctrlrange="-3.14159 3.14159" kp='1000'/>
+
+    <velocity name="shoulder-link-v" joint="joint-a1" ctrlrange="-0.15 0.15"  kv='50'/>
+    <velocity name="bicep-link-v" joint="joint-a2" ctrlrange="-0.15 0.15"  kv='50'/>
+    <velocity name="forearm-link-v" joint="joint-a3" ctrlrange="-0.15 0.15"  kv='50'/>
+    <velocity name="sphericalWrist1-link-v" joint="joint-a4" ctrlrange="-0.15 0.15"  kv='50'/>
+    <velocity name="sphericalWrist2-link-v" joint="joint-a5" ctrlrange="-0.15 0.15"  kv='50'/>
+    <velocity name="bracelet-link-v" joint="joint-a6" ctrlrange="-0.15 0.15"  kv='50'/>
+    
+
+  </actuator>
+
+  <sensor>
+    <!-- User parameter is the number of absolute encoder bits -->
+    <actuatorpos name='shoulder-link-input'  actuator='shoulder-link'  user='13'/>
+    <actuatorpos name='bicep-link-input'  actuator='bicep-link'  user='13'/>
+    <actuatorpos name='forearm-link-input'  actuator='forearm-link'  user='13'/>
+    <actuatorpos name='sphericalWrist1-link-input'  actuator='sphericalWrist1-link'  user='13'/>
+    <actuatorpos name='sphericalWrist2-link-input'  actuator='sphericalWrist2-link'  user='13'/>
+    <actuatorpos name='bracelet-link-input'  actuator='bracelet-link'  user='13'/>
+    <jointpos name='shoulder-link-output'  joint='joint-a1'  user='13'/>
+    <jointpos name='bicep-link-output'  joint='joint-a2'  user='13'/>
+    <jointpos name='forearm-link-output'  joint='joint-a3'  user='13'/>
+    <jointpos name='sphericalWrist1-link-output'  joint='joint-a4'  user='13'/>
+    <jointpos name='sphericalWrist2-link-output'  joint='joint-a5'  user='13'/>
+    <jointpos name='bracelet-link-output'  joint='joint-a6'  user='13'/>
+
+    <framepos      name="base-link-pos" objtype="body" objname="arm-base"/>
+    <framequat      name="base-link-ori" objtype="body" objname="arm-base"/>
+
+    <framepos      name="end-effector-pos" objtype="site" objname="end-effector"/>
+    <framelinvel   name="end-effector-vel" objtype="site" objname="end-effector"/>
+    <framequat     name='end-effector-orientation' objtype='site' objname='end-effector'/>
+    <gyro          name='end-effector-angular-velocity'    site='end-effector' noise='5e-4' cutoff='34.9'/>
+    <accelerometer name='end-effector-linear-acceleration' site='end-effector' noise='1e-2' cutoff='157'/>
+
+    <framequat     name='base-orientation' objtype='site' objname='imu'/>
+    <gyro          name='base-angular-velocity'    site='imu' noise='5e-4' cutoff='34.9'/>
+    <accelerometer name='base-linear-acceleration' site='imu' noise='1e-2' cutoff='157'/>
+    <magnetometer  name='base-magnetometer'        site='imu'/>
+    <!-- <rangefinder   name='range1'                     site='range1' noise='1e-2' cutoff='1'/>
+    <rangefinder   name='range2'                     site='range2' noise='1e-2' cutoff='1'/>
+    <rangefinder   name='range3'                     site='range3' noise='1e-2' cutoff='1'/>
+    <rangefinder   name='range4'                     site='range4' noise='1e-2' cutoff='1'/>
+    <rangefinder   name='range5'                     site='range5' noise='1e-2' cutoff='1'/>
+    <rangefinder   name='range6'                     site='range6' noise='1e-2' cutoff='1'/> -->
+  </sensor>
+
+</mujoco>
